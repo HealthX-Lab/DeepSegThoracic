@@ -31,17 +31,14 @@ def perform_ttest(model1, model2):
 
 if __name__ == '__main__':
 
-    root = 'results\\NSD_Dice_full'
-    titles = ['AttentionUNet', 'AttentionUNetS4', 'nnunet', 'nnunetS4', 'nnunet_slidingWindow', 'nnunet_slidingWindowS4', 'STUNet', 'STUNetS5', 'SwinUNETR',
-              'SwinUNETRV2', 'SwinUNetP2', 'SwinUNetS4', 'SwinUNetV1', 'SwinUNetV2',
-              'SwinUNetV3', 'SwinUNetV3P2', 'SwinUNetV4']
+    root = 'Results\\NSD_Dice_full'
+    titles = [
+        'AttentionUNet', 'AttentionUNetS4', 'nnunet_slidingWindow', 'nnunet_slidingWindowS4',
+        'STUNet', 'STUNetS5', 'SwinUNETR', 'SwinUNETRV2', 'SwinUNetP2', 'SwinUNetS4',
+        'SwinUNetV1', 'SwinUNetV2', 'SwinUNetV3', 'SwinUNetV3P2', 'SwinUNetV4',
+        'FocalSegNet'
+    ]
     all_pred_folders = os.listdir(root)
-    all_pred_folders.remove('nnunet_test_info_predictedTs_AU_ModifiedPoly.json')
-    all_pred_folders.remove('nnunet_test_info_predictedTs.json')
-    # all_pred_folders.remove('complete_stats')
-    # all_pred_folders.remove('old_11_8_2023')
-    # all_pred_folders.remove('temp')
-    # print(all_pred_folders)
     model_results = {}
     for f in all_pred_folders:
         with open(f'{root}/{f}', 'r') as json_file:
@@ -62,9 +59,10 @@ if __name__ == '__main__':
 
     # Analysis for num of stages
     comparisons = [
-        # ('nnunet', 'nnunetS4')
-                   ('nnunet_slidingWindow', 'nnunet_slidingWindowS4'), ('AttentionUnet', 'AttentionUnetS4'), ('STUNet', 'STUNetS5'),
-                   ('SwinUnetP2', 'SwinUnetS4')]
+        ('nnunet_slidingWindow', 'nnunet_slidingWindowS4'),
+        ('AttentionUnet', 'AttentionUnetS4'),
+        ('STUNet', 'STUNetS5'),
+        ('SwinUnetP2', 'SwinUnetS4')]
 
     rejected_null_hyp = []
     for c in comparisons:
@@ -85,7 +83,7 @@ if __name__ == '__main__':
     data = {'Model': [], 'Class': [], 'Dice': [], 'NSD': []}
     class_info = [('BTCV', 'BTCVDice', 'BTCVNSD'), ('surgery', 'SurgDice', 'SurgNSD'), ('All', 'AllDice', 'AllNSD')]
     # selected_models = ['nnunetS4', 'STUNetS5', 'AttentionUnetS4', 'SUR', 'SwinUnetS4']
-    selected_models = ['nnunet_slidingWindowS4', 'STUNetS5', 'AttentionUnetS4', 'SUR', 'SwinUnetS4']
+    selected_models = ['nnunet_slidingWindowS4', 'STUNetS5', 'AttentionUnetS4', 'SUR', 'FocalSegNet', 'SwinUnetS4']
     # for model_name in model_results.keys():
     for model_name in selected_models:
         for i in range(len(model_results[model_name]['AllDice'])):
@@ -132,16 +130,6 @@ if __name__ == '__main__':
         print("\nTukey's HSD Post Hoc Test:")
         print(posthoc)
         print(100 * '---')
-
-    # # Perform Tukey's HSD post hoc test within each class
-    # unique_classes = df_class['Class'].unique()
-    # for class_name in unique_classes:
-    #     class_data = df_class[df_class['Class'] == class_name]
-    #     # print(class_data)
-    #     posthoc = pairwise_tukeyhsd(class_data['MeanDice'], class_data['Model'])
-    #     print(f"\nTukey's HSD Post Hoc Test for {class_name}:")
-    #     print(posthoc)
-    #     print(100 * '-')
 
     print('Next Analysis')
     # Analysis for SwinUnet
@@ -220,7 +208,7 @@ if __name__ == '__main__':
     data = {'Model': [], 'Class': [], 'Dice': [], 'NSD': []}
     class_info = [('BTCV', 'BTCVDice', 'BTCVNSD'), ('surgery', 'SurgDice', 'SurgNSD'), ('All', 'AllDice', 'AllNSD')]
     # selected_models = ['nnunet', 'STUNet', 'AttentionUnet', 'SUR', 'SwinUnet']
-    selected_models = ['nnunet_slidingWindow', 'STUNet', 'AttentionUnet', 'SUR', 'SwinUnet']
+    selected_models = ['nnunet_slidingWindow', 'STUNet', 'AttentionUNet', 'SUR', 'FocalSegNet', 'SwinUnet', 'SwinUNetV4']
     # for model_name in model_results.keys():
     for model_name in selected_models:
         for i in range(len(model_results[model_name]['AllDice'])):
