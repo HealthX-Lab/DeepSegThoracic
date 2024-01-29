@@ -76,7 +76,7 @@ if __name__ == '__main__':
         img_size=96, num_classes=26, in_chans=1, embed_dim=48,
         patch_size=2, use_conv_embed=True
     )
-    SU_model = SU(
+    SU_model = SwinUnetConventional(
         img_size=96,
         in_channels=1,
         out_channels=26,
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         use_checkpoint=True,
     )
 
-    SU_3_p2_model = SwinUnet(
+    SU_3_p2_model = SwinUnetConventional(
         img_size=96,
         in_channels=1,
         out_channels=26,
@@ -95,7 +95,7 @@ if __name__ == '__main__':
         use_checkpoint=True,
     )
 
-    SU_4_model = SwinUnet(
+    SU_4_model = SwinUnetConventional(
         img_size=96,
         in_channels=1,
         out_channels=26,
