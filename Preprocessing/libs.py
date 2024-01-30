@@ -291,6 +291,8 @@ def combine_masks(mask_dir, output, class_type):
         masks = list(class_map_5_parts["class_map_part_muscles"].values())
     elif class_type == "vertebrae_ribs":
         masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + list(class_map_5_parts["class_map_part_ribs"].values())
+    elif class_type == "vertebrae_ribs_sacrum":
+        masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + list(class_map_5_parts["class_map_part_ribs"].values()) + ["sacrum"]
     elif class_type == "lung":
         masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"]
