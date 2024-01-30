@@ -32,22 +32,25 @@ To train the models, use the following command:
 ```bash
 nnUNet_train 3d_fullres TRAINER_CLASS_NAME TASK_NAME_OR_ID 0
 ```
-Replace TRAINER_CLASS_NAME with one of the following options based on the desired model architecture:
-- 3DUNet model: nnUNetTrainerV2_noDeepSupervisionAndMirroring
-- Four stage 3DUNet: nnUNetTrainerV2_noDeepSupervisionAndMirroringS4
-- STUNet model: nnUNetTrainerV2_STUNet
-- Four stage STUNet model: nnUNetTrainerV2_STUNetS5
-- AttentionUNet model: nnUNetTrainerV2_AttentionUnet
-- Four stage AttentionUNet model: nnUNetTrainerV2_AttentionUnetS4
-- SwinUNETR model: nnUNetTrainerV2_SUR
-- FocalSegNet model: nnUNetTrainerV2_FocalUNETR48
-- 3DSwinUnet model: nnUNetTrainerV2_SwinUnet
-- 3DSwinUnet with patch size 2 model: nnUNetTrainerV2_SwinUnetP2
-- Four stage 3DSwinUnet with patch size 2 model: nnUNetTrainerV2_SwinUnetS4
-- 3DSwinUnetV1 model: nnUNetTrainerV2_SwinUnetV1
-- 3DSwinUnetV2 model: nnUNetTrainerV2_SwinUnetV2
-- 3DSwinUnetV3 model: nnUNetTrainerV2_SwinUnetV3
-- 3DSwinUnetV4 model: nnUNetTrainerV2_SwinUnetV4
+#### Supported Model Architectures and Corresponding TRAINER_CLASS_NAME
+
+| Model Architecture                | TRAINER_CLASS_NAME                              |
+|------------------------------------|-------------------------------------------------|
+| 3DUNet model                       | nnUNetTrainerV2_noDeepSupervisionAndMirroring   |
+| Four stage 3DUNet                  | nnUNetTrainerV2_noDeepSupervisionAndMirroringS4 |
+| STUNet model                       | nnUNetTrainerV2_STUNet                          |
+| Four stage STUNet model             | nnUNetTrainerV2_STUNetS5                        |
+| AttentionUNet model                | nnUNetTrainerV2_AttentionUnet                   |
+| Four stage AttentionUNet model      | nnUNetTrainerV2_AttentionUnetS4                 |
+| SwinUNETR model                     | nnUNetTrainerV2_SUR                             |
+| FocalSegNet model                   | nnUNetTrainerV2_FocalUNETR48                    |
+| 3DSwinUnet model                    | nnUNetTrainerV2_SwinUnet                        |
+| 3DSwinUnet with patch size 2 model  | nnUNetTrainerV2_SwinUnetP2                      |
+| Four stage 3DSwinUnet with patch size 2 model | nnUNetTrainerV2_SwinUnetS4            |
+| 3DSwinUnetV1 model                   | nnUNetTrainerV2_SwinUnetV1                      |
+| 3DSwinUnetV2 model                   | nnUNetTrainerV2_SwinUnetV2                      |
+| 3DSwinUnetV3 model                   | nnUNetTrainerV2_SwinUnetV3                      |
+| 3DSwinUnetV4 model                   | nnUNetTrainerV2_SwinUnetV4   
 
 ### Inference
 Follow these steps to perform inference on your desired input:
