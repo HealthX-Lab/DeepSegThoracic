@@ -5,14 +5,14 @@ This is the official repository for the paper titled "CT-based Anatomical Segmen
 
 
 ## Overview
-- [Model Architectures](https://github.com/HealthX-Lab/DeepSegAbdominal/tree/main/nnunet/network_architecture):
-  -- The folder contains the implementation of the deep learning models used in the study.
+[Model Architectures](https://github.com/HealthX-Lab/DeepSegAbdominal/tree/main/nnunet/network_architecture):
+  - The folder contains the implementation of the deep learning models used in the study.
 
-- [Model Weights](https://github.com/HealthX-Lab/DeepSegAbdominal/tree/main/nnUNet_trained_models):
-   --  The folder containing the weight of the trained models.
+[Model Weights](https://github.com/HealthX-Lab/DeepSegAbdominal/tree/main/nnUNet_trained_models):
+   -  The folder containing the weight of the trained models.
 
-- [Trainers](https://github.com/HealthX-Lab/DeepSegAbdominal/tree/main/nnunet/training/network_training/nnUNet_variants/architectural_variants):
-   --  Trainer of  each model in the nnunet framework.
+[Trainers](https://github.com/HealthX-Lab/DeepSegAbdominal/tree/main/nnunet/training/network_training/nnUNet_variants/architectural_variants):
+   -  Trainer of  each model in the nnunet framework.
 
 ## Getting Started
 
