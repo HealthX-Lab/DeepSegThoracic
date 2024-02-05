@@ -1,4 +1,4 @@
-# DeepSegAbdominal
+# DeepSegThoracic
 Benchmark UNet-like deep learning architectures for abdominal segmentation
 
 This is the official repository for the paper titled "CT-based Anatomical Segmentation for Thoracic Surgical Planning: A Benchmark Study for 3D U-shaped Deep Learning Models." The repository includes the source code and model weights that were presented in the paper. You can also access the trainer for each model, which has been implemented in the nnunet framework.
