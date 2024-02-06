@@ -72,5 +72,3 @@ Follow these steps to perform inference on your desired input:
      
 3. **Additional Information:**
    - For more detailed information on training and inference using the nnUNet framework, refer to the [nnUNet documentation](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1).
-
-## References
