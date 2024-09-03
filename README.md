@@ -56,7 +56,10 @@ nnUNet_train 3d_fullres TRAINER_CLASS_NAME TASK_NAME_OR_ID 0
 | 3DSwinUnetV2 model                   | nnUNetTrainerV2_SwinUnetV2                      |
 | 3DSwinUnetV3 model                   | nnUNetTrainerV2_SwinUnetV3                      |
 | 3DSwinUnetV4 model                   | nnUNetTrainerV2_SwinUnetV4   
-
+| 3DSwinUnetB0 model                   | nnUNetTrainerV2_SwinUnetB0                      |
+| 3DSwinUnetB1 model                   | nnUNetTrainerV2_SwinUnetB1                      |
+| 3DSwinUnetB2 model                   | nnUNetTrainerV2_SwinUnetB2                      |
+| 3DSwinUnetB3 model                   | nnUNetTrainerV2_SwinUnetB3                      |
 ### Inference
 Follow these steps to perform inference on your desired input:
 
