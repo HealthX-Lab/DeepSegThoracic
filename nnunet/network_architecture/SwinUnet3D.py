@@ -24,6 +24,8 @@ from monai.networks.blocks.dynunet_block import get_conv_layer
 from monai.networks.blocks import PatchEmbed, UnetOutBlock, UnetrBasicBlock, UnetrUpBlock, UnetResBlock
 from monai.networks.layers import DropPath, trunc_normal_
 from monai.utils import ensure_tuple_rep, look_up_option, optional_import
+from monai.networks.blocks import Convolution
+
 
 rearrange, _ = optional_import("einops", name="rearrange")
 
@@ -931,6 +933,84 @@ class BasicLayer(nn.Module):
         return x
 
 
+class GridAttentionBlockND(nn.Module):
+    def __init__(self, in_channels, gating_channels, inter_channels=None, dimension=3, mode='concatenation',
+                 sub_sample_factor=(2,2,2)):
+        super(GridAttentionBlockND, self).__init__()
+
+        assert dimension in [2, 3]
+        assert mode in ['concatenation', 'concatenation_debug', 'concatenation_residual']
+
+        # Downsampling rate for the input featuremap
+        if isinstance(sub_sample_factor, tuple): self.sub_sample_factor = sub_sample_factor
+        elif isinstance(sub_sample_factor, list): self.sub_sample_factor = tuple(sub_sample_factor)
+        else: self.sub_sample_factor = tuple([sub_sample_factor]) * dimension
+
+        # Default parameter set
+        self.mode = mode
+        self.dimension = dimension
+        self.sub_sample_kernel_size = self.sub_sample_factor
+
+        # Number of channels (pixel dimensions)
+        self.in_channels = in_channels
+        self.gating_channels = gating_channels
+        self.inter_channels = inter_channels
+
+        if self.inter_channels is None:
+            self.inter_channels = in_channels // 2
+            if self.inter_channels == 0:
+                self.inter_channels = 1
+
+        if dimension == 3:
+            conv_nd = nn.Conv3d
+            bn = nn.BatchNorm3d
+            self.upsample_mode = 'trilinear'
+        elif dimension == 2:
+            conv_nd = nn.Conv2d
+            bn = nn.BatchNorm2d
+            self.upsample_mode = 'bilinear'
+        else:
+            raise NotImplemented
+
+        # Output transform
+        self.W = nn.Sequential(
+            conv_nd(in_channels=self.in_channels, out_channels=self.in_channels, kernel_size=1, stride=1, padding=0),
+            bn(self.in_channels),
+        )
+
+        # Theta^T * x_ij + Phi^T * gating_signal + bias
+        self.theta = conv_nd(in_channels=self.in_channels, out_channels=self.inter_channels,
+                             kernel_size=self.sub_sample_kernel_size, stride=self.sub_sample_factor, padding=0, bias=False)
+        self.phi = conv_nd(in_channels=self.gating_channels, out_channels=self.inter_channels,
+                           kernel_size=1, stride=1, padding=0, bias=True)
+        self.psi = conv_nd(in_channels=self.inter_channels, out_channels=1, kernel_size=1, stride=1, padding=0, bias=True)
+
+        # Initialise weights
+        for m in self.children():
+            init_weights(m, init_type='kaiming')
+
+        # Define the operation
+        if mode == 'concatenation':
+            self.operation_function = self._concatenation
+        elif mode == 'concatenation_debug':
+            self.operation_function = self._concatenation_debug
+        elif mode == 'concatenation_residual':
+            self.operation_function = self._concatenation_residual
+        else:
+            raise NotImplementedError('Unknown operation function.')
+
+
+    def forward(self, x, g):
+        '''
+        :param x: (b, c, t, h, w)
+        :param g: (b, g_d)
+        :return:
+        '''
+
+        output = self.operation_function(x, g)
+        return output
+
+
 class SwinUnet(nn.Module):
     """
     3D version of the Swin-Unet model based on: "Swin-Unet: Unet-like Pure Transformer for Medical Image Segmentation
@@ -959,6 +1039,12 @@ class SwinUnet(nn.Module):
             spatial_dims: int = 3,
             upsample=("expandV3", "finalExpandV3"),
             downsample="merging",
+            bottleneck="default",
+            # default: two Swin Transformer block, V0: No bottleneck,
+            # V1: One Swin Transformer block, V2: One Residual block, V3: two residual blocks
+            skip_connection="default"
+            # default: residual blocks, V1: attentionGates from attentionUnet.
+
     ) -> None:
         """
         Args:
@@ -1019,23 +1105,91 @@ class SwinUnet(nn.Module):
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
         self.layers_down = nn.ModuleList()
         down_sample_mod = look_up_option(downsample, MERGING_MODE) if isinstance(downsample, str) else downsample
+        self.skip_connection_type = skip_connection
+
         # build encoder layers
         for i_layer in range(self.num_layers):
-            layer = BasicLayer(
-                dim=int(self.embed_dim * 2 ** i_layer),
-                depth=depths[i_layer],
-                num_heads=num_heads[i_layer],
-                window_size=self.window_size,
-                drop_path=dpr[sum(depths[:i_layer]): sum(depths[: i_layer + 1])],
-                mlp_ratio=mlp_ratio,
-                qkv_bias=qkv_bias,
-                drop=drop_rate,
-                attn_drop=attn_drop_rate,
-                norm_layer=norm_layer,
-                downsample=down_sample_mod if (i_layer < (self.num_layers - 1)) else None,
-                use_checkpoint=use_checkpoint,
-            )
-            self.layers_down.append(layer)
+            if (i_layer < (self.num_layers - 1)):
+                layer = BasicLayer(
+                    dim=int(self.embed_dim * 2 ** i_layer),
+                    depth=depths[i_layer],
+                    num_heads=num_heads[i_layer],
+                    window_size=self.window_size,
+                    drop_path=dpr[sum(depths[:i_layer]): sum(depths[: i_layer + 1])],
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    drop=drop_rate,
+                    attn_drop=attn_drop_rate,
+                    norm_layer=norm_layer,
+                    downsample=down_sample_mod,
+                    use_checkpoint=use_checkpoint,
+                )
+                self.layers_down.append(layer)
+            else:
+                if (bottleneck == "default"):
+                    layer = BasicLayer(
+                        dim=int(self.embed_dim * 2 ** i_layer),
+                        depth=depths[i_layer],
+                        num_heads=num_heads[i_layer],
+                        window_size=self.window_size,
+                        drop_path=dpr[sum(depths[:i_layer]): sum(depths[: i_layer + 1])],
+                        mlp_ratio=mlp_ratio,
+                        qkv_bias=qkv_bias,
+                        drop=drop_rate,
+                        attn_drop=attn_drop_rate,
+                        norm_layer=norm_layer,
+                        downsample=None,
+                        use_checkpoint=use_checkpoint,
+                    )
+                    self.layers_down.append(layer)
+                elif (bottleneck == "V1"):
+                    layer = BasicLayer(
+                        dim=int(self.embed_dim * 2 ** i_layer),
+                        depth=1,
+                        num_heads=num_heads[i_layer],
+                        window_size=self.window_size,
+                        drop_path=dpr[sum(depths[:i_layer]): sum(depths[: i_layer + 1])],
+                        mlp_ratio=mlp_ratio,
+                        qkv_bias=qkv_bias,
+                        drop=drop_rate,
+                        attn_drop=attn_drop_rate,
+                        norm_layer=norm_layer,
+                        downsample=None,
+                        use_checkpoint=use_checkpoint,
+                    )
+                    self.layers_down.append(layer)
+                elif (bottleneck in ["V2"]):
+                    layer = UnetrBasicBlock(
+                        spatial_dims=spatial_dims,
+                        in_channels=int(self.embed_dim * 2 ** i_layer),
+                        out_channels=int(self.embed_dim * 2 ** i_layer),
+                        kernel_size=3,
+                        stride=1,
+                        norm_name=norm_name,
+                        res_block=True,
+                    )
+                    self.layers_down.append(layer)
+                elif (bottleneck in ["V3"]):
+                    self.layers_down.append(UnetrBasicBlock(
+                        spatial_dims=spatial_dims,
+                        in_channels=int(self.embed_dim * 2 ** i_layer),
+                        out_channels=int(self.embed_dim * 2 ** i_layer),
+                        kernel_size=3,
+                        stride=1,
+                        norm_name=norm_name,
+                        res_block=True,
+                    ))
+                    self.layers_down.append(UnetrBasicBlock(
+                        spatial_dims=spatial_dims,
+                        in_channels=int(self.embed_dim * 2 ** i_layer),
+                        out_channels=int(self.embed_dim * 2 ** i_layer),
+                        kernel_size=3,
+                        stride=1,
+                        norm_name=norm_name,
+                        res_block=True,
+                    ))
+
+
         self.num_features = int(self.embed_dim * 2 ** (self.num_layers - 1))
 
         self.encoder1 = UnetrBasicBlock(
@@ -1066,15 +1220,16 @@ class SwinUnet(nn.Module):
                                              EXPANDING_MODE) if isinstance(upsample[1], str) else upsample[1]
         for i_layer in range(self.num_layers):
             fs = int(self.embed_dim * 2 ** (self.num_layers - 1 - i_layer))
-            concat_linear = UnetrBasicBlock(
-                spatial_dims=spatial_dims,
-                in_channels=2 * fs,
-                out_channels=fs,
-                kernel_size=3,
-                stride=1,
-                norm_name=norm_name,
-                res_block=True,
-            )
+            if (skip_connection == "default"):
+                concat_linear = UnetrBasicBlock(
+                    spatial_dims=spatial_dims,
+                    in_channels=2 * fs,
+                    out_channels=fs,
+                    kernel_size=3,
+                    stride=1,
+                    norm_name=norm_name,
+                    res_block=True,
+                ) # Skip-connection
             if i_layer == 0:
                 layer_up = up_sample_mod(
                     dim=int(self.embed_dim * 2 ** (self.num_layers - i_layer - 1)), dim_scale=2, norm_layer=norm_layer,
@@ -1144,11 +1299,12 @@ class SwinUnet(nn.Module):
         enc0 = self.encoder1(x)
         x, x_downsample = self.forward_features(x, normalize)
         for inx, layer_up in enumerate(self.layers_up):
-            x = torch.cat([x,
-                           x_downsample[self.num_layers - 1 - inx],
-                           ], 1)
+            if (self.skip_connection_type == "default"):
+                x = torch.cat([x,
+                               x_downsample[self.num_layers - 1 - inx],
+                               ], 1)
 
-            x = self.concat_back_dim[inx](x)
+                x = self.concat_back_dim[inx](x)
             if inx == 0:
                 if self.upsample_type == 'expand':
                     x = rearrange(x, "b c d h w -> b d h w c")
