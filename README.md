@@ -1,11 +1,11 @@
 # DeepSegThoracic
 Benchmark UNet-like deep learning architectures for abdominal segmentation
 
-This is the official repository for the paper titled "[Architecture Analysis and Benchmarking of 3D U-shaped Deep Learning Models for Thoracic Anatomical Segmentation](https://arxiv.org/abs/2402.03230)" by Arash Harirpoush, Amirhossein Rasoulian, Marta Kersten-Oertel, and Yiming Xiao. The repository includes the source code and model weights that were presented in the paper. You can also access the trainer for each model, which has been implemented in the nnunet framework.
+This is the official repository for the paper titled "[Architecture Analysis and Benchmarking of 3D U-Shaped Deep Learning Models for Thoracic Anatomical Segmentation](https://ieeexplore.ieee.org/abstract/document/10669568/references#references)" by Arash Harirpoush, Amirhossein Rasoulian, Marta Kersten-Oertel, and Yiming Xiao. The repository includes the source code and model weights that were presented in the paper. You can also access the trainer for each model, which has been implemented in the nnunet framework.
 
 To use this repository, please cite the following:
 
-Arash Harirpoush, Amirhossein Rasoulian, Marta Kersten-Oertel and Yiming Xiao, “CT-based Anatomical Segmentation for Thoracic Surgical Planning: A Benchmark Study for 3D U-shaped Deep Learning Models,” arXiv:2402.03230, 2024.
+Arash Harirpoush, Amirhossein Rasoulian, Marta Kersten-Oertel, and Yiming Xiao. "Architecture Analysis and Benchmarking of 3D U-shaped Deep Learning Models for Thoracic Anatomical Segmentation." IEEE Access (2024).
 
 <img src="https://github.com/HealthX-Lab/DeepSegAbdominal/blob/main/Assets/Labels.png" alt="Labels">
 
